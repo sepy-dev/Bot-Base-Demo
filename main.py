@@ -1,18 +1,18 @@
 from telegram.ext import Application, CommandHandler
-from config import BOT_TOKEN
-from users import start_user_management
+
+from handlers import start  # اضافه کردن هندلرهای جدید
+
 
 async def main():
-    application = Application.builder().token(BOT_TOKEN).build()
+    application = Application.builder().token("7847166209:AAFfQLo46-rMVJxfuL9MxXNM-QzP3nKUn5g").build()
 
     # Register handlers
-    start_user_management(application)
+    application.add_handler(CommandHandler("start", start))
 
+    # Start the application
     await application.start()
-    await application.start_polling()
     await application.idle()
 
 if __name__ == '__main__':
     import asyncio
     asyncio.run(main())
-    #sss
