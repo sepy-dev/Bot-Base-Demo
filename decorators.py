@@ -28,10 +28,26 @@ def check_membership_and_rules(func):
             await update.message.reply_text(f'⚠️ خطای غیرمنتظره‌ای رخ داد: {e}')
     return wrapper
 
+
 async def button_handler(update: Update, context: CallbackContext):
     query = update.callback_query
     user_id = query.from_user.id
     user_name = query.from_user.full_name
+    
+    if update.message.chat.type == 'private':
+        is_member = await is_user_in_channels(user_id, context)
+        if is_member:
+            await query.edit_message_text(f'خوش اومدی حالا میتونی با دوستات بازی کنی', reply_markup=InlineKeyboardMarkup([
+                [InlineKeyboardButton("بازی با دوستان", switch_inline_query="")],
+                [InlineKeyboardButton("درباره ما", callback_data='about_us')]
+            ])) 
+        else:
+            await query.answer('❌ شما باید ابتدا در کانال‌ها عضو شوید.', show_alert=True)
+    elif query.data == 'about_us':
+        await query.edit_message_text('این ربات برای بازی و سرگرمی طراحی شده است. از بازی‌ها لذت ببرید!')
+        
+    else:
+        button_handler(update, context)    
 
     if query.data == 'join_game':
         is_member = await is_user_in_channels(user_id, context)
@@ -52,3 +68,5 @@ async def button_handler(update: Update, context: CallbackContext):
             # شروع بازی
         else:
             await query.answer('هنوز ظرفیت بازی به حد مجاز نرسیده است.', show_alert=True)
+    elif query.data == 'about_us':
+        await query.edit_message_text('این ربات برای بازی و سرگرمی طراحی شده است. از بازی‌ها لذت ببرید!')

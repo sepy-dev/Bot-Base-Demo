@@ -1,13 +1,21 @@
-from telegram import Update
+from venv import logger
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle,InputTextMessageContent
+
 from telegram.ext import CallbackContext
-from keyboards import start_game_keyboard
+import logging
 from game1 import start_game1
 from game2 import start_game2
 
 print("handlers.py has been imported")
 
 async def start(update: Update, context: CallbackContext) -> None:
-    await update.message.reply_text('برای شروع بازی دکمه زیر را فشار دهید:', reply_markup=start_game_keyboard())
+    #button_handler(update, context)
+    keyboard = [
+        [InlineKeyboardButton("بازی با دوستان", switch_inline_query="")],
+        [InlineKeyboardButton("درباره ما", callback_data='about_us')]
+    ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text('سلام! به ربات خوش آمدید.', reply_markup=reply_markup)
 
 async def callback_handler(update: Update, context: CallbackContext) -> None:
     query = update.callback_query
@@ -22,16 +30,23 @@ async def callback_handler(update: Update, context: CallbackContext) -> None:
             await start_game2(update, context)
         else:
             # سایر دکمه‌های اینلاین را پردازش کن
-            await handle_inline_buttons(update, context)
-    
-    elif callback_data.startswith("direct_"):
-        # پردازش دکمه‌های دایرکت
-        await handle_direct_buttons(update, context)
+            pass
 
-async def handle_inline_buttons(update: Update, context: CallbackContext) -> None:
-    # پردازش سایر دکمه‌های اینلاین
-    await update.callback_query.answer("دکمه اینلاین دیگر")
 
-async def handle_direct_buttons(update: Update, context: CallbackContext) -> None:
-    # پردازش دکمه‌های دایرکت
-    await update.callback_query.answer("دکمه دایرکت دیگر")
+async def mention_handler(update: Update, context: CallbackContext):
+    query = update.inline_query.query
+    keyboard = [ [InlineKeyboardButton("شروع بازی", callback_data="inline_game1_start")], 
+                [InlineKeyboardButton("آموزش بازی", callback_data="inline_game")] ]
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    results = [
+        InlineQueryResultArticle(
+            id='game',
+            title= "شروع بازی",
+            input_message_content=InputTextMessageContent("میخوای بازی رو شروع کنی؟ بزن روم"),
+            reply_markup=reply_markup
+        )
+    ]
+    await update.inline_query.answer(results)
+
+
+

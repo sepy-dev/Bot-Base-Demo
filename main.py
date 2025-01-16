@@ -1,18 +1,42 @@
-from telegram.ext import Application, CommandHandler
+import nest_asyncio # type: ignore
+nest_asyncio.apply()
 
-from handlers import start  # اضافه کردن هندلرهای جدید
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup # type: ignore
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes,InlineQueryHandler
+from game1 import start_game1
+from game2 import start_game2
+from decorators import button_handler
+from handlers import mention_handler, callback_handler
+
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 
 
-async def main():
-    application = Application.builder().token("7847166209:AAFfQLo46-rMVJxfuL9MxXNM-QzP3nKUn5g").build()
+    #button_handler(update, context)
+    keyboard = [
+        [InlineKeyboardButton("شروع بازی", callback_data='procses')]
+    ]
+    
 
-    # Register handlers
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    await update.message.reply_text('سلام! به ربات خوش آمدید.', reply_markup=reply_markup)
+
+async def main() -> None:
+    # توکن ربات خود را اینجا قرار دهید
+    TOKEN = "7847166209:AAFfQLo46-rMVJxfuL9MxXNM-QzP3nKUn5g"
+
+    # مقداردهی اولیه Application
+    application = Application.builder().token(TOKEN).build()
+
+    # اضافه کردن handler برای دستور /start
     application.add_handler(CommandHandler("start", start))
+    application.add_handler(CommandHandler("game1", start_game1))
+    application.add_handler(CommandHandler("game2", start_game2))
+    application.add_handler(CallbackQueryHandler(callback_handler))
+    application.add_handler(InlineQueryHandler(mention_handler))
 
-    # Start the application
-    await application.start()
-    await application.idle()
+    # شروع ربات
+    await application.run_polling()
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import asyncio
     asyncio.run(main())
