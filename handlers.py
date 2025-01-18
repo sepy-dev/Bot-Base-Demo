@@ -24,8 +24,8 @@ async def callback_handler(update: Update, context: CallbackContext) -> None:
     # بررسی اینکه آیا دکمه اینلاین است یا دایرکت
     if callback_data.startswith("inline_"):
         # بررسی بازی‌ها از callback_data
-        if callback_data == "inline_game1_start":
-            await start_game1(update, context)
+        if callback_data.startswith("inline_game1_start"):
+            await start_game1(update, context, keygame="inline_game1_start")
         elif callback_data == "inline_game2_start":
             await start_game2(update, context)
         else:

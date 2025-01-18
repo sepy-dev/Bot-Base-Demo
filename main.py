@@ -9,16 +9,7 @@ from decorators import button_handler
 from handlers import mention_handler, callback_handler
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-
-
-    #button_handler(update, context)
-    keyboard = [
-        [InlineKeyboardButton("شروع بازی", callback_data='procses')]
-    ]
-    
-
-    reply_markup = InlineKeyboardMarkup(keyboard)
-    await update.message.reply_text('سلام! به ربات خوش آمدید.', reply_markup=reply_markup)
+    await update.message.reply_text('سلام! به ربات خوش آمدید.')
 
 async def main() -> None:
     # توکن ربات خود را اینجا قرار دهید
@@ -33,7 +24,6 @@ async def main() -> None:
     application.add_handler(CommandHandler("game2", start_game2))
     application.add_handler(CallbackQueryHandler(callback_handler))
     application.add_handler(InlineQueryHandler(mention_handler))
-
     # شروع ربات
     await application.run_polling()
 
