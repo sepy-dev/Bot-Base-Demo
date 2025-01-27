@@ -15,21 +15,21 @@ funny_texts = [
 
 # لیست بازیکنان و متن‌های استفاده شده
 
-
+keygame="inline_game1_start"
 
 @check_membership_and_rules(keygame="inline_game1_start")
-async def start_game1(update: Update, context: CallbackContext, keygame: str, data: dict) -> None:
+async def start_game1(update: Update, context: CallbackContext,  data: dict, query) -> None:
     # Reset game state
     data["used_texts"] = []
     data["current_player_index"] = 0
     data["last_activity_time"] = datetime.now()
 
-    await update.message.reply_text('بازی 1 شروع شد!')
+  
 
     # شروع بازی با اولین بازیکن
-    await next_turn(update, context, data)
+    await next_turn(update, context, data, query)
 
-async def next_turn(update: Update, context: CallbackContext, data: dict) -> None:
+async def next_turn(update: Update, context: CallbackContext, data: dict, query) -> None:
     # بررسی زمان عدم فعالیت
     if data["last_activity_time"] and datetime.now() - data["last_activity_time"] > timedelta(minutes=15):
         await end_game(update, context, data)
@@ -50,7 +50,7 @@ async def next_turn(update: Update, context: CallbackContext, data: dict) -> Non
     data["used_texts"].append(selected_text)
 
     # ارسال متن به بازیکن فعلی
-    await update.message.reply_text(
+    await query.edit_message_text(
         f"نوبت {current_player}:\n{selected_text}",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("واکنشم رو نشون دادم", callback_data=f'{keygame}_reacted')]
