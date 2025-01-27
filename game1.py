@@ -18,7 +18,7 @@ funny_texts = [
 keygame="inline_game1_start"
 
 @check_membership_and_rules(keygame="inline_game1_start")
-async def start_game1(update: Update, context: CallbackContext,  data: dict, query) -> None:
+async def start_game1(update: Update, context: CallbackContext, query, data: dict) -> None:
     # Reset game state
     data["used_texts"] = []
     data["current_player_index"] = 0
@@ -29,7 +29,7 @@ async def start_game1(update: Update, context: CallbackContext,  data: dict, que
     # شروع بازی با اولین بازیکن
     await next_turn(update, context, data, query)
 
-async def next_turn(update: Update, context: CallbackContext, data: dict, query) -> None:
+async def next_turn(update: Update, context: CallbackContext, data: dict,query) -> None:
     # بررسی زمان عدم فعالیت
     if data["last_activity_time"] and datetime.now() - data["last_activity_time"] > timedelta(minutes=15):
         await end_game(update, context, data)
