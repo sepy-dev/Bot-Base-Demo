@@ -1,53 +1,61 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import CallbackContext
 import httpx
-from users import is_user_in_channels  # اضافه کردن تابع بررسی عضویت
+from users import is_user_in_channels , required_channels # اضافه کردن تابع بررسی عضویت
 
-players = []
+chat_data = {}
 
 def check_membership_and_rules(keygame):
     def decorator(func):
         async def wrapper(update: Update, context: CallbackContext, *args, **kwargs):
-            try:
-                query = update.callback_query
-                user_id = query.from_user.id
-                user_name = query.from_user.full_name    
-                # تعریف متغیر keygame
-                print(f"Callback data: {query.data}")  # Debugging statement
-                print(f"Expected keygame: {keygame}")  # Debugging statement
-                if query.data == keygame:
-                    await query.edit_message_text(f'بازیکنان: {", ".join(players)}', reply_markup=InlineKeyboardMarkup([
-                                [InlineKeyboardButton("من هستم", callback_data=f'{keygame}_join_game')],
-                                [InlineKeyboardButton("شروع بازی", callback_data=f'{keygame}_start_game')]
-                            ]))
-                elif query.data == f'{keygame}_join_game':
-                    print(f"Join game detected for keygame: {keygame}")  # Debugging statement
-                    is_member = await is_user_in_channels(user_id, context)
-                    if is_member:
-                        if user_name not in players:
-                            players.append(user_name)
-                        await query.edit_message_text(f'بازیکنان: {", ".join(players)}', reply_markup=InlineKeyboardMarkup([
+            chat_id = update.callback_query.inline_message_id 
+            if chat_id not in chat_data:
+                chat_data[chat_id] = {
+                    "players": [],
+                    "used_texts": [],
+                    "current_player_index": 0,
+                    "last_activity_time": None
+                }
+            data = chat_data[chat_id]
+            
+            query = update.callback_query
+            user_id = query.from_user.id
+            user_name = query.from_user.full_name    
+            # تعریف متغیر keygame
+            print(f"Callback data: {query.data}")  # Debugging statement
+            print(f"Expected keygame: {keygame}")  # Debugging statement
+            if query.data == keygame:
+                await query.edit_message_text(f'بازیکنان: {", ".join(data["players"])}, {", ".join(required_channels)}', reply_markup=InlineKeyboardMarkup([
                             [InlineKeyboardButton("من هستم", callback_data=f'{keygame}_join_game')],
                             [InlineKeyboardButton("شروع بازی", callback_data=f'{keygame}_start_game')]
                         ]))
+            elif query.data == f'{keygame}_join_game':
+                print(f"Join game detected for keygame: {keygame}")  # Debugging statement
+                is_member = await is_user_in_channels(user_id, context)
+                if is_member:
+                    print(user_name,"\n",data["players"])  # Debugging statement
+                    print("User is a member")  # Debugging statement
+                    if user_name not in data["players"]:
+                        print("User is not in the game")  # Debugging statement
+                        data["players"].append(user_name)
+                        await query.edit_message_text(f'بازیکنان: {", ".join(data["players"])}, {", ".join(required_channels)}', reply_markup=InlineKeyboardMarkup([
+                        [InlineKeyboardButton("من هستم", callback_data=f'{keygame}_join_game')],
+                        [InlineKeyboardButton("شروع بازی", callback_data=f'{keygame}_start_game')]
+                    ]))
                     else:
-                        await query.answer('❌ شما باید ابتدا در کانال‌ها عضو شوید.', show_alert=True)
-                elif query.data == f'{keygame}_start_game':
-                    if len(players) >= 2:
-                        await query.edit_message_text(f'بازی شروع شد! بازیکنان: {", ".join(players)}')
-
-                await func(update, context, keygame=keygame, *args, **kwargs)
-
-            except httpx.HTTPStatusError as e:
-                if update.message:
-                    await update.message.reply_text(f'⚠️ خطایی رخ داد: {e}')
+                        print("User is already in the game")  # Debugging statement
+                        await query.answer('شما قبلاً عضو بازی شده‌اید.', show_alert=True)
                 else:
-                    await update.callback_query.message.reply_text(f'⚠️ خطایی رخ داد: {e}')
-            except Exception as e:
-                if update.message:
-                    await update.message.reply_text(f'⚠️ خطای غیرمنتظره‌ای رخ داد: {e}')
-                else:
-                    await update.callback_query.message.reply_text(f'⚠️ خطای غیرمنتظره‌ای رخ داد: {e}')
+                    await query.answer('❌ شما باید ابتدا در کانال‌ها عضو شوید.', show_alert=True)
+            elif query.data == f'{keygame}_start_game':
+                print(f"Start game detected for keygame: {keygame}")  # Debugging statement
+                if len(data["players"]) < 2:
+                    print("Bargharare")
+                    await query.answer('هنوز ظرفیت بازی به حد مجاز نرسیده است.', show_alert=True)
+                        
+
+                await func(update, context,  data=data, query=query, *args, **kwargs)
+
         return wrapper
     return decorator
 
